@@ -10,7 +10,7 @@ import seaborn as sns
 
 class MultiLayerPerceptron:
 
-    def __init__(self, features, hidden_size, output_size, input_size=None, data_div_ratio=0.7, learning_rate=0.5, train_set=None, test_set=None, random_seed=None):
+    def __init__(self, features, hidden_size, output_size, epochs = 1, input_size=None, data_div_ratio=0.7, learning_rate=0.5, train_set=None, test_set=None, random_seed=None):
 
         self.input_size = input_size if input_size else features.shape[1] - 1
         self.hidden_size = hidden_size
@@ -18,6 +18,7 @@ class MultiLayerPerceptron:
         self.features = features
         self.ratio = data_div_ratio
         self.learning_rate = learning_rate
+        self.epochs = epochs
 
         if random_seed:
             np.random.seed(random_seed)
@@ -218,21 +219,28 @@ class MultiLayerPerceptron:
 
         Finalmente, se calcula la perdida.
 
+        Se hace por cada row de features en el training set, repetido tantas veces como epocas sean indicadas.
+
         """
+        loss_epoch = {}
         loss_it = []
         i = 0
-        for f in self.train_set:
-            i += 1
+        for i in range(self.epochs):
+            for f in self.train_set:
+                i += 1
 
-            x = f[:len(f) - 1]
-            y = f[len(f) - 1:]
+                x = f[:len(f) - 1]
+                y = f[len(f) - 1:]
 
-            self.forward(x, y)
-            self.gradient_descent(x, y)
+                self.forward(x, y)
+                self.gradient_descent(x, y)
 
-            loss_it.append(self.loss(y))
+                loss_it.append(self.loss(y))
 
-        return loss_it
+            loss_epoch[i] = loss_it
+            loss_it = []
+
+        return loss_epoch
 
     def predict(self):
         """Proceso de prediccion.
@@ -269,7 +277,7 @@ def main():
 
     data = np.concatenate((earthSpace.to_numpy(), medSci.to_numpy()))
 
-    model = MultiLayerPerceptron(data, 15, 1, random_seed=42)
+    model = MultiLayerPerceptron(data, 15, 1, epochs=2000)
 
     model.training()
 
